@@ -29,7 +29,7 @@ const MasterCategory = () => {
   const imagePrefix = "https://s3.ap-south-1.amazonaws.com/business.strackit.com/";
   
   // Shop ID for fetching categories
-  const shopId = 12; // Using the same shop ID as in BannerSlider
+  const shopId = 512; // Using the same shop ID as in BannerSlider
 
   // Fallback categories for error handling or empty response
   // const fallbackCategories = [

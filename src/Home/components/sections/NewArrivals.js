@@ -28,7 +28,7 @@ const NewArrivals = ({
   const imagePrefix = "https://s3.ap-south-1.amazonaws.com/business.strackit.com/";
   
   // Shop ID for fetching products
-  const shopId = 12; // Using the same shop ID as in other components
+  const shopId = 512; // Using the same shop ID as in other components
 
   useEffect(() => {
     const fetchNewArrivals = async () => {

@@ -1,51 +1,51 @@
-import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import { 
   Navbar,
-  BannerSlider,
-  MasterCategory,
-  NewArrivals,
-  StaticTextSection,
-  Static2Section,
+  CartSidebar,
+  ViewCart,
   Footer
 } from './Home/components';
+import HomePage from './Home/pages/HomePage';
 import './App.css';
 
 function App() {
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState(0);
+
+  const handleCartClick = () => {
+    setIsCartOpen(true);
+  };
+
+  const handleCartClose = () => {
+    setIsCartOpen(false);
+  };
+
   return (
     <Router>
       <div className="App">
-        <Navbar />
-        <ErrorBoundary>
-          <BannerSlider />
-        </ErrorBoundary>
-        <StaticTextSection />
-        <ErrorBoundary>
-          <MasterCategory />
-        </ErrorBoundary>
-        <ErrorBoundary>
-          <NewArrivals 
-            title="NEW ARRIVALS" 
-            subtitle="Nemo enim ipsam voluptatem quia voluptas sit aspernatur"
-            limit={8}
-            sortNewest={true}
-          />
-        </ErrorBoundary>
-        <ErrorBoundary>
-          <Static2Section />
-        </ErrorBoundary>
-        <ErrorBoundary>
-          <NewArrivals 
-            title="YOU MIGHT LIKE" 
-            subtitle="Nemo enim ipsam voluptatem quia voluptas sit aspernatur" 
-            limit={8}
-            sortNewest={false}
-          />
-        </ErrorBoundary>
+        <Navbar 
+          cartCount={cartItemCount}
+          onCartClick={handleCartClick}
+        />
+        
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/cart" element={<ViewCart />} />
+        </Routes>
+        
         <ErrorBoundary>
           <Footer />
         </ErrorBoundary>
+        
+        {/* Cart Sidebar */}
+        <CartSidebar 
+          isOpen={isCartOpen}
+          onClose={handleCartClose}
+          cartItemCount={cartItemCount}
+          setCartItemCount={setCartItemCount}
+        />
       </div>
     </Router>
   );

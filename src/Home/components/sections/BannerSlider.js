@@ -127,7 +127,7 @@ const BannerSlider = () => {
           await testFilters();
         }
         
-        // First try to fetch banners for specific shop (ID: 12)
+        // First try to fetch banners for specific shop (ID: 512)
         let bannerData = null;
         try {
           const shopFilter = {
