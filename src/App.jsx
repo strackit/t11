@@ -1,48 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ShopProvider } from './context/ShopContext';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AppProvider } from './context/AppContext';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
+import Wishlist from './pages/Wishlist';
 import Cart from './pages/Cart';
 import Orders from './pages/Orders';
-import Wishlist from './pages/Wishlist';
+import './index.css';
 
 function App() {
-  const [theme, setTheme] = useState('light');
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
-  };
-
   return (
-    <ShopProvider>
-      <Router>
-        <div className="container">
-          <Navbar theme={theme} toggleTheme={toggleTheme} />
-
-          <main>
+    <AppProvider>
+      <BrowserRouter>
+        <div className="app">
+          <Navbar />
+          <main className="main-content">
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/orders" element={<Orders />} />
-              <Route path="/wishlist" element={<Wishlist />} />
             </Routes>
           </main>
         </div>
-      </Router>
-    </ShopProvider>
+      </BrowserRouter>
+    </AppProvider>
   );
 }
 

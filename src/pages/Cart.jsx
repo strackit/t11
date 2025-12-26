@@ -1,57 +1,124 @@
-import React from 'react';
-import { useShop } from '../context/ShopContext';
-import { motion } from 'framer-motion';
-import { Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { useApp } from '../context/AppContext';
+import { Link, useNavigate } from 'react-router-dom';
+import './Cart.css';
 
 const Cart = () => {
-    const { cart, removeFromCart, placeOrder } = useShop();
+  const { cart, removeFromCart, updateCartQuantity, cartTotal, placeOrder } = useApp();
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  const navigate = useNavigate();
 
-    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const handlePlaceOrder = () => {
+    const order = placeOrder();
+    if (order) {
+      setOrderPlaced(true);
+      setTimeout(() => {
+        navigate('/orders');
+      }, 2000);
+    }
+  };
 
+  if (orderPlaced) {
     return (
-        <motion.div
-            className="page-container"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-        >
-            <h1 className="page-title">Shopping Cart</h1>
-
-            {cart.length === 0 ? (
-                <div className="empty-state">
-                    <p>Your cart is empty.</p>
-                </div>
-            ) : (
-                <>
-                    <div className="cart-list">
-                        {cart.map((item) => (
-                            <div key={item.cartItemId || item.id} className="cart-item">
-                                <div className="item-info">
-                                    <img src={item.image} alt={item.name} className="cart-item-img" />
-                                    <div>
-                                        <h4 style={{ margin: 0 }}>{item.name}</h4>
-                                        <p style={{ margin: '4px 0', opacity: 0.8 }}>Rs.{item.price} x {item.quantity}</p>
-                                    </div>
-                                </div>
-                                <button onClick={() => removeFromCart(item.id)} className="remove-btn">
-                                    <Trash2 size={18} />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="cart-summary" style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--secondary)', borderRadius: '12px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                            <span>Total Amount:</span>
-                            <span style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--accent)' }}>Rs.{total.toFixed(2)}</span>
-                        </div>
-                        <button onClick={placeOrder} className="submit-btn" style={{ width: '100%', padding: '1rem', borderRadius: '8px' }}>
-                            Place Order
-                        </button>
-                    </div>
-                </>
-            )}
-        </motion.div>
+      <div className="cart empty-state">
+        <div className="success-content">
+          <span className="success-icon">✅</span>
+          <h2>Order Placed Successfully!</h2>
+          <p>Redirecting to orders...</p>
+        </div>
+      </div>
     );
+  }
+
+  if (cart.length === 0) {
+    return (
+      <div className="cart empty-state">
+        <div className="empty-content">
+          <span className="empty-icon">🛒</span>
+          <h2>Your cart is empty</h2>
+          <p>Add some products to get started</p>
+          <Link to="/" className="continue-shopping-btn">
+            Continue Shopping
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="cart">
+      <div className="page-header">
+        <h1>Shopping Cart</h1>
+        <p>{cart.length} item{cart.length !== 1 ? 's' : ''} in cart</p>
+      </div>
+
+      <div className="cart-layout">
+        <div className="cart-items">
+          {cart.map((item) => (
+            <div key={item.id} className="cart-item">
+              <div className="item-image">
+                <img src={item.image} alt={item.name} />
+              </div>
+              <div className="item-details">
+                <h3 className="item-name">{item.name}</h3>
+                <p className="item-price">₹{item.price.toLocaleString()}</p>
+              </div>
+              <div className="quantity-controls">
+                <button
+                  className="qty-btn"
+                  onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
+                >
+                  −
+                </button>
+                <span className="qty-value">{item.quantity}</span>
+                <button
+                  className="qty-btn"
+                  onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
+                >
+                  +
+                </button>
+              </div>
+              <div className="item-total">
+                <span className="total-label">Total</span>
+                <span className="total-value">
+                  ₹{(item.price * item.quantity).toLocaleString()}
+                </span>
+              </div>
+              <button
+                className="remove-item-btn"
+                onClick={() => removeFromCart(item.id)}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div className="cart-summary">
+          <h3>Order Summary</h3>
+          <div className="summary-row">
+            <span>Subtotal</span>
+            <span>₹{cartTotal.toLocaleString()}</span>
+          </div>
+          <div className="summary-row">
+            <span>Shipping</span>
+            <span className="free-shipping">FREE</span>
+          </div>
+          <div className="summary-divider"></div>
+          <div className="summary-row total">
+            <span>Total</span>
+            <span>₹{cartTotal.toLocaleString()}</span>
+          </div>
+          <button className="place-order-btn" onClick={handlePlaceOrder}>
+            Place Order
+          </button>
+          <Link to="/" className="continue-link">
+            ← Continue Shopping
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Cart;

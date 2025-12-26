@@ -1,52 +1,67 @@
-import React from 'react';
-import { useShop } from '../context/ShopContext';
-import { motion } from 'framer-motion';
-import { Trash2, ShoppingBag } from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import { Link } from 'react-router-dom';
+import './Wishlist.css';
 
 const Wishlist = () => {
-    const { wishlist, removeFromWishlist, addToCart } = useShop();
+  const { wishlist, removeFromWishlist, addToCart } = useApp();
 
+  const handleMoveToCart = (product) => {
+    addToCart(product);
+    removeFromWishlist(product.id);
+  };
+
+  if (wishlist.length === 0) {
     return (
-        <motion.div
-            className="page-container"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-        >
-            <h1 className="page-title">My Wishlist</h1>
-
-            {wishlist.length === 0 ? (
-                <p className="empty-state">Your wishlist is empty.</p>
-            ) : (
-                <div className="cart-list">
-                    {wishlist.map((item) => (
-                        <div key={item.id} className="cart-item">
-                            <div className="item-info">
-                                {item.image ? (
-                                    <img src={item.image} alt={item.name} className="cart-item-img" onError={(e) => e.target.style.display = 'none'} />
-                                ) : null}
-                                <div>
-                                    <h4>{item.name}</h4>
-                                    <p>Rs.{item.price}</p>
-                                </div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                <button
-                                    onClick={() => addToCart(item)}
-                                    className="add-button"
-                                    style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}
-                                >
-                                    Add to Cart
-                                </button>
-                                <button onClick={() => removeFromWishlist(item.id)} className="remove-btn">
-                                    <Trash2 size={18} />
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </motion.div>
+      <div className="wishlist empty-state">
+        <div className="empty-content">
+          <span className="empty-icon">❤️</span>
+          <h2>Your wishlist is empty</h2>
+          <p>Save items you love by clicking the heart icon</p>
+          <Link to="/" className="continue-shopping-btn">
+            Continue Shopping
+          </Link>
+        </div>
+      </div>
     );
+  }
+
+  return (
+    <div className="wishlist">
+      <div className="page-header">
+        <h1>My Wishlist</h1>
+        <p>{wishlist.length} item{wishlist.length !== 1 ? 's' : ''} saved</p>
+      </div>
+
+      <div className="wishlist-items">
+        {wishlist.map((item) => (
+          <div key={item.id} className="wishlist-item">
+            <div className="item-image">
+              <img src={item.image} alt={item.name} />
+            </div>
+            <div className="item-details">
+              <h3 className="item-name">{item.name}</h3>
+              <p className="item-description">{item.description}</p>
+              <p className="item-price">₹{item.price.toLocaleString()}</p>
+            </div>
+            <div className="item-actions">
+              <button
+                className="move-to-cart-btn"
+                onClick={() => handleMoveToCart(item)}
+              >
+                Move to Cart
+              </button>
+              <button
+                className="remove-btn"
+                onClick={() => removeFromWishlist(item.id)}
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export default Wishlist;
