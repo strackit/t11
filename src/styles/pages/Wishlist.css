@@ -2,6 +2,7 @@
   padding: 2rem;
   max-width: 1000px;
   margin: 0 auto;
+  animation: fadeIn 0.4s ease-out;
 }
 
 .wishlist.empty-state {
@@ -23,29 +24,28 @@
 
 .empty-content h2 {
   font-size: 1.5rem;
-  color: #fff;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .empty-content p {
-  color: #a0aec0;
+  color: var(--text-secondary);
   margin-bottom: 1.5rem;
 }
 
 .continue-shopping-btn {
   display: inline-block;
-  padding: 0.875rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 0.75rem 1.5rem;
+  background: var(--accent-primary);
   color: white;
   text-decoration: none;
-  border-radius: 12px;
-  font-weight: 600;
-  transition: all 0.3s ease;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .continue-shopping-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  background: var(--accent-secondary);
 }
 
 .wishlist-items {
@@ -59,24 +59,31 @@
   align-items: center;
   gap: 1.5rem;
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  transition: all 0.3s ease;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  animation: slideInRight 0.4s ease-out backwards;
 }
 
+.wishlist-item:nth-child(1) { animation-delay: 0.05s; }
+.wishlist-item:nth-child(2) { animation-delay: 0.1s; }
+.wishlist-item:nth-child(3) { animation-delay: 0.15s; }
+.wishlist-item:nth-child(4) { animation-delay: 0.2s; }
+.wishlist-item:nth-child(5) { animation-delay: 0.25s; }
+
 .wishlist-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--accent-primary);
 }
 
 .item-image {
   flex-shrink: 0;
   width: 100px;
   height: 100px;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
 }
 
 .item-image img {
@@ -91,22 +98,22 @@
 }
 
 .item-name {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-primary);
   margin: 0 0 0.25rem 0;
 }
 
 .item-description {
   font-size: 0.85rem;
-  color: #718096;
+  color: var(--text-muted);
   margin: 0 0 0.5rem 0;
 }
 
 .item-price {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #48bb78;
+  color: var(--success);
   margin: 0;
 }
 
@@ -118,36 +125,36 @@
 }
 
 .move-to-cart-btn {
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 0.625rem 1.25rem;
+  background: var(--accent-primary);
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   color: white;
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: 500;
+  font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .move-to-cart-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  background: var(--accent-secondary);
 }
 
 .remove-btn {
-  padding: 0.6rem 1.5rem;
+  padding: 0.5rem 1.25rem;
   background: transparent;
-  border: 1px solid rgba(239, 68, 68, 0.5);
-  border-radius: 10px;
-  color: #ef4444;
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  color: var(--danger);
   font-weight: 500;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .remove-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--danger);
+  color: white;
 }
 
 @media (max-width: 768px) {

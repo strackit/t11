@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import Navbar from './components/Navbar';
+import FloatingCartButton from './components/FloatingCartButton';
 import Home from './pages/Home';
 import Wishlist from './pages/Wishlist';
 import Cart from './pages/Cart';
@@ -21,6 +22,7 @@ function App() {
               <Route path="/orders" element={<Orders />} />
             </Routes>
           </main>
+          <FloatingCartButton />
         </div>
       </BrowserRouter>
     </AppProvider>
@@ -28,3 +30,4 @@ function App() {
 }
 
 export default App;
+

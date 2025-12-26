@@ -26,6 +26,11 @@ export const AppProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    return saved || 'light';
+  });
+
   // Persist to localStorage
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
@@ -38,6 +43,16 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('orders', JSON.stringify(orders));
   }, [orders]);
+
+  // Theme persistence and application
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
 
   // Cart functions
   const addToCart = (product) => {
@@ -90,6 +105,11 @@ export const AppProvider = ({ children }) => {
     return wishlist.some((item) => item.id === productId);
   };
 
+  const getCartQuantity = (productId) => {
+    const item = cart.find((item) => item.id === productId);
+    return item ? item.quantity : 0;
+  };
+
   // Order functions
   const placeOrder = () => {
     if (cart.length === 0) return null;
@@ -129,7 +149,10 @@ export const AppProvider = ({ children }) => {
         isInWishlist,
         placeOrder,
         cartTotal,
-        cartCount
+        cartCount,
+        getCartQuantity,
+        theme,
+        toggleTheme
       }}
     >
       {children}
