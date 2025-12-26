@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Link, useNavigate } from 'react-router-dom';
-import './Cart.css';
+import '../styles/pages/Cart.css';
 
 const Cart = () => {
   const { cart, removeFromCart, updateCartQuantity, cartTotal, placeOrder } = useApp();

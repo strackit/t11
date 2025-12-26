@@ -1,6 +1,6 @@
 import { useApp } from '../context/AppContext';
 import { Link } from 'react-router-dom';
-import './Wishlist.css';
+import '../styles/pages/Wishlist.css';
 
 const Wishlist = () => {
   const { wishlist, removeFromWishlist, addToCart } = useApp();

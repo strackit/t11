@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { products, categories } from '../data/products';
-import './Home.css';
+import '../styles/pages/Home.css';
 
 const Home = () => {
   const { addToCart, addToWishlist, isInWishlist, removeFromWishlist } = useApp();

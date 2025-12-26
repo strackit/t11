@@ -1,6 +1,6 @@
 import { useApp } from '../context/AppContext';
 import { Link } from 'react-router-dom';
-import './Orders.css';
+import '../styles/pages/Orders.css';
 
 const Orders = () => {
   const { orders } = useApp();
