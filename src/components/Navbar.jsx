@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { useShop } from '../context/ShopContext';
 import '../styles/components/Navbar.css';
 
 // Simple SVG Icons
@@ -55,6 +56,7 @@ const ShoppingBagIcon = () => (
 const Navbar = () => {
   const location = useLocation();
   const { cartCount, wishlist, theme, toggleTheme } = useApp();
+  const { shopName } = useShop();
 
   const navItems = [
     { path: '/', label: 'Home', icon: <HomeIcon /> },
@@ -68,7 +70,7 @@ const Navbar = () => {
       <div className="navbar-container">
         <Link to="/" className="navbar-brand">
           <span className="brand-icon"><ShoppingBagIcon /></span>
-          <span className="brand-text">ShopEase</span>
+          <span className="brand-text">{shopName || 'Shop'}</span>
         </Link>
 
         <ul className="navbar-menu">

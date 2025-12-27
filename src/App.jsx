@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ShopProvider } from './context/ShopContext';
 import { AppProvider } from './context/AppContext';
 import Navbar from './components/Navbar';
 import FloatingCartButton from './components/FloatingCartButton';
@@ -10,22 +11,24 @@ import './index.css';
 
 function App() {
   return (
-    <AppProvider>
-      <BrowserRouter>
-        <div className="app">
-          <Navbar />
-          <main className="main-content">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/wishlist" element={<Wishlist />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/orders" element={<Orders />} />
-            </Routes>
-          </main>
-          <FloatingCartButton />
-        </div>
-      </BrowserRouter>
-    </AppProvider>
+    <ShopProvider>
+      <AppProvider>
+        <BrowserRouter>
+          <div className="app">
+            <Navbar />
+            <main className="main-content">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/wishlist" element={<Wishlist />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/orders" element={<Orders />} />
+              </Routes>
+            </main>
+            <FloatingCartButton />
+          </div>
+        </BrowserRouter>
+      </AppProvider>
+    </ShopProvider>
   );
 }
 
