@@ -1,5 +1,6 @@
 import { useApp } from '../context/AppContext';
 import { Link } from 'react-router-dom';
+import { getImageUrl } from '../constants';
 import '../styles/pages/Wishlist.css';
 
 const HeartIconLarge = () => (
@@ -42,12 +43,12 @@ const Wishlist = () => {
         {wishlist.map((item) => (
           <div key={item.id} className="wishlist-item">
             <div className="item-image">
-              <img src={item.image} alt={item.name} />
+              <img src={getImageUrl(item.featureImage)} alt={item.name} />
             </div>
             <div className="item-details">
               <h3 className="item-name">{item.name}</h3>
-              <p className="item-description">{item.description}</p>
-              <p className="item-price">₹{item.price.toLocaleString()}</p>
+              <p className="item-description" dangerouslySetInnerHTML={{ __html: item.description }} />
+              <p className="item-price">₹{item.prize.toLocaleString()}</p>
             </div>
             <div className="item-actions">
               <button

@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useShop } from '../context/ShopContext';
+import LoginModal from './LoginModal';
 import '../styles/components/Navbar.css';
 
 // Simple SVG Icons
@@ -53,10 +55,18 @@ const ShoppingBagIcon = () => (
   </svg>
 );
 
+const UserIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+    <circle cx="12" cy="7" r="4"/>
+  </svg>
+);
+
 const Navbar = () => {
   const location = useLocation();
   const { cartCount, wishlist, theme, toggleTheme } = useApp();
   const { shopName } = useShop();
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const navItems = [
     { path: '/', label: 'Home', icon: <HomeIcon /> },
@@ -66,37 +76,51 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="navbar">
-      <div className="navbar-container">
-        <Link to="/" className="navbar-brand">
-          <span className="brand-icon"><ShoppingBagIcon /></span>
-          <span className="brand-text">{shopName || 'Shop'}</span>
-        </Link>
+    <>
+      <nav className="navbar">
+        <div className="navbar-container">
+          <Link to="/" className="navbar-brand">
+            <span className="brand-icon"><ShoppingBagIcon /></span>
+            <span className="brand-text">{shopName || 'Shop'}</span>
+          </Link>
 
-        <ul className="navbar-menu">
-          {navItems.map((item) => (
-            <li key={item.path}>
-              <Link
-                to={item.path}
-                className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
-              >
-                <span className="nav-icon">{item.icon}</span>
-                <span className="nav-label">{item.label}</span>
-                {item.count > 0 && (
-                  <span className="nav-badge">{item.count}</span>
-                )}
-              </Link>
-            </li>
-          ))}
-        </ul>
+          <ul className="navbar-menu">
+            {navItems.map((item) => (
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
+                >
+                  <span className="nav-icon">{item.icon}</span>
+                  <span className="nav-label">{item.label}</span>
+                  {item.count > 0 && (
+                    <span className="nav-badge">{item.count}</span>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
 
-        <button className="theme-toggle" onClick={toggleTheme} title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
-          {theme === 'light' ? <MoonIcon /> : <SunIcon />}
-        </button>
-      </div>
-    </nav>
+          <button 
+            className="nav-user-btn" 
+            onClick={() => setIsLoginModalOpen(true)} 
+            title="Login"
+          >
+            <UserIcon />
+          </button>
+
+          <button className="theme-toggle" onClick={toggleTheme} title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
+            {theme === 'light' ? <MoonIcon /> : <SunIcon />}
+          </button>
+        </div>
+      </nav>
+
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
+      />
+    </>
   );
 };
 
 export default Navbar;
-

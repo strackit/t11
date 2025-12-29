@@ -117,7 +117,7 @@ export const AppProvider = ({ children }) => {
     const order = {
       id: Date.now(),
       items: [...cart],
-      total: cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
+      total: cart.reduce((sum, item) => sum + (item.prize || 0) * item.quantity, 0),
       date: new Date().toISOString(),
       status: 'Confirmed'
     };
@@ -128,7 +128,7 @@ export const AppProvider = ({ children }) => {
   };
 
   const cartTotal = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + (item.prize || 0) * item.quantity,
     0
   );
 

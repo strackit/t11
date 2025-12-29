@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { getImageUrl } from '../constants';
 import '../styles/pages/Cart.css';
 
 const CartIconLarge = () => (
@@ -77,11 +78,11 @@ const Cart = () => {
           {cart.map((item) => (
             <div key={item.id} className="cart-item">
               <div className="item-image">
-                <img src={item.image} alt={item.name} />
+                <img src={getImageUrl(item.featureImage)} alt={item.name} />
               </div>
               <div className="item-details">
                 <h3 className="item-name">{item.name}</h3>
-                <p className="item-price">₹{item.price.toLocaleString()}</p>
+                <p className="item-price">₹{item.prize.toLocaleString()}</p>
               </div>
               <div className="quantity-controls">
                 <button
@@ -101,7 +102,7 @@ const Cart = () => {
               <div className="item-total">
                 <span className="total-label">Total</span>
                 <span className="total-value">
-                  ₹{(item.price * item.quantity).toLocaleString()}
+                  ₹{(item.prize * item.quantity).toLocaleString()}
                 </span>
               </div>
               <button
