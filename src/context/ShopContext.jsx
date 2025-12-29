@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import shopController from 'shops-query/src/modules/shop';
+import ShopQuery from 'shops-query';
 import { getDomainName } from '../services/domainService';
 
 const ShopContext = createContext();
@@ -26,7 +26,7 @@ export const ShopProvider = ({ children }) => {
         const domainName = getDomainName();
         console.log('Fetching shop for domain:', domainName);
         
-        const shopData = await shopController.fetchShops({
+        const shopData = await ShopQuery.shop.fetchShops({
           customDomain: domainName
         });
         

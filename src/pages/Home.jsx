@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { products, categories } from '../data/products';
+import { useShop } from '../context/ShopContext';
+import ShopQuery from 'shops-query';
+import { getImageUrl } from '../constants';
 import '../styles/pages/Home.css';
 
 // SVG Icons for Home page
@@ -30,19 +32,83 @@ const MinusIcon = () => (
 
 const Home = () => {
   const { addToCart, addToWishlist, isInWishlist, removeFromWishlist, getCartQuantity, updateCartQuantity } = useApp();
-  const [expandedCategories, setExpandedCategories] = useState(
-    categories.reduce((acc, cat) => ({ ...acc, [cat.id]: true }), {})
-  );
+  const { shopId } = useShop();
+  
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedCategories, setExpandedCategories] = useState({});
+
+  // Fetch master categories and then secondary categories for each
+  useEffect(() => {
+    const loadCategories = async () => {
+      if (!shopId) return;
+      
+      try {
+        setLoading(true);
+        
+        // Step 1: Fetch master categories
+        const masterCategories = await ShopQuery.mastercategories.fetchMasterCategories(shopId);
+        console.log('Master categories:', masterCategories);
+        
+        if (masterCategories && Array.isArray(masterCategories)) {
+          // Step 2: For each master category, fetch its secondary categories
+          const categoriesWithSecondary = await Promise.all(
+            masterCategories.map(async (masterCat) => {
+              const secondaryCategories = await ShopQuery.SecondaryCategories.fetchSecondaryCategories(shopId, masterCat.id);
+              console.log(`Secondary categories for ${masterCat.category}:`, secondaryCategories);
+              
+              return {
+                masterCategory: masterCat.category,
+                secondaryCategories: secondaryCategories || []
+              };
+            })
+          );
+          
+          // Step 3: For each secondary category, fetch products using getProductsByCategoryController
+          const allSecondaryWithProducts = await Promise.all(
+            categoriesWithSecondary.flatMap((item) =>
+              item.secondaryCategories.map(async (sec) => {
+                const products = await ShopQuery.productbycategory.getProductsByCategoryController(
+                  item.masterCategory,
+                  shopId,
+                  sec.category || sec.name
+                );
+                console.log(`Products for ${sec.category || sec.name}:`, products);
+                
+                return {
+                  ...sec,
+                  masterCategory: item.masterCategory,
+                  products: products || []
+                };
+              })
+            )
+          );
+          
+          console.log('All secondary categories with products:', allSecondaryWithProducts);
+          setCategories(allSecondaryWithProducts);
+          
+          // Initialize expanded state for all secondary categories
+          const expandedState = allSecondaryWithProducts.reduce((acc, cat) => ({ 
+            ...acc, 
+            [cat.category || cat.id]: true 
+          }), {});
+          setExpandedCategories(expandedState);
+        }
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCategories();
+  }, [shopId]);
 
   const toggleCategory = (categoryId) => {
     setExpandedCategories((prev) => ({
       ...prev,
       [categoryId]: !prev[categoryId]
     }));
-  };
-
-  const getProductsByCategory = (categoryId) => {
-    return products.filter((product) => product.category === categoryId);
   };
 
   const handleWishlistToggle = (product) => {
@@ -53,6 +119,20 @@ const Home = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="home">
+        <div className="page-header">
+          <h1>Products</h1>
+          <p>Loading categories...</p>
+        </div>
+        <div className="categories-container">
+          <div className="loading-spinner">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="home">
       <div className="page-header">
@@ -61,37 +141,39 @@ const Home = () => {
       </div>
 
       <div className="categories-container">
-        {categories.map((category) => (
-          <div key={category.id} className="category-section">
-            <button
-              className={`category-header ${expandedCategories[category.id] ? 'expanded' : ''}`}
-              onClick={() => toggleCategory(category.id)}
-            >
-              <div className="category-info">
-                <span className="category-name">{category.name}</span>
-                <span className="category-count">
-                  {getProductsByCategory(category.id).length} items
+        {categories.map((cat) => {
+          const categoryKey = cat.category || cat.id;
+          return (
+            <div key={categoryKey} className="category-section">
+              <button
+                className={`category-header ${expandedCategories[categoryKey] ? 'expanded' : ''}`}
+                onClick={() => toggleCategory(categoryKey)}
+              >
+                <div className="category-info">
+                  <span className="category-name">{cat.category || cat.name}</span>
+                  <span className="category-count">
+                    {cat.products?.length || 0} items
+                  </span>
+                </div>
+                <span className="expand-icon">
+                  <ChevronIcon expanded={expandedCategories[categoryKey]} />
                 </span>
-              </div>
-              <span className="expand-icon">
-                <ChevronIcon expanded={expandedCategories[category.id]} />
-              </span>
-            </button>
+              </button>
 
-            <div className={`products-list-wrapper ${expandedCategories[category.id] ? 'expanded' : 'collapsed'}`}>
-              <div className="products-list">
-                {getProductsByCategory(category.id).map((product) => {
-                  const cartQty = getCartQuantity(product.id);
+              <div className={`products-list-wrapper ${expandedCategories[categoryKey] ? 'expanded' : 'collapsed'}`}>
+                <div className="products-list">
+                  {(cat.products || []).map((product) => {
+                    const cartQty = getCartQuantity(product.id);
                   
                   return (
                     <div key={product.id} className="product-row">
                       <div className="product-image">
-                        <img src={product.image} alt={product.name} />
+                        <img src={getImageUrl(product.featureImage)} alt={product.name} />
                       </div>
                       <div className="product-details">
                         <h3 className="product-name">{product.name}</h3>
-                        <p className="product-description">{product.description}</p>
-                        <p className="product-price">₹{product.price.toLocaleString()}</p>
+                        <p className="product-description" dangerouslySetInnerHTML={{ __html: product.description }} />
+                        <p className="product-price">₹{product.prize?.toLocaleString()}</p>
                       </div>
                       <div className="product-actions">
                         <button
@@ -134,12 +216,11 @@ const Home = () => {
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 };
 
 export default Home;
-
-
