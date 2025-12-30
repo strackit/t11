@@ -38,70 +38,51 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [expandedCategories, setExpandedCategories] = useState({});
 
-  // Fetch master categories and then secondary categories for each
+  // Fetch all products using single API call
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadProducts = async () => {
       if (!shopId) return;
       
       try {
         setLoading(true);
         
-        // Step 1: Fetch master categories
-        const masterCategories = await ShopQuery.mastercategories.fetchMasterCategories(shopId);
-        console.log('Master categories:', masterCategories);
+        // Single API call to get all products
+        const allProducts = await ShopQuery.products.getProductsController(shopId);
+        console.log('All products:', allProducts);
         
-        if (masterCategories && Array.isArray(masterCategories)) {
-          // Step 2: For each master category, fetch its secondary categories
-          const categoriesWithSecondary = await Promise.all(
-            masterCategories.map(async (masterCat) => {
-              const secondaryCategories = await ShopQuery.SecondaryCategories.fetchSecondaryCategories(shopId, masterCat.id);
-              console.log(`Secondary categories for ${masterCat.category}:`, secondaryCategories);
-              
-              return {
-                masterCategory: masterCat.category,
-                secondaryCategories: secondaryCategories || []
+        if (allProducts && Array.isArray(allProducts)) {
+          // Group products by secondary category
+          const groupedByCategory = allProducts.reduce((acc, product) => {
+            const categoryName = product.secondaryCategory || product.category || 'Other';
+            if (!acc[categoryName]) {
+              acc[categoryName] = {
+                category: categoryName,
+                products: []
               };
-            })
-          );
+            }
+            acc[categoryName].products.push(product);
+            return acc;
+          }, {});
           
-          // Step 3: For each secondary category, fetch products using getProductsByCategoryController
-          const allSecondaryWithProducts = await Promise.all(
-            categoriesWithSecondary.flatMap((item) =>
-              item.secondaryCategories.map(async (sec) => {
-                const products = await ShopQuery.productbycategory.getProductsByCategoryController(
-                  item.masterCategory,
-                  shopId,
-                  sec.category || sec.name
-                );
-                console.log(`Products for ${sec.category || sec.name}:`, products);
-                
-                return {
-                  ...sec,
-                  masterCategory: item.masterCategory,
-                  products: products || []
-                };
-              })
-            )
-          );
-          
-          console.log('All secondary categories with products:', allSecondaryWithProducts);
-          setCategories(allSecondaryWithProducts);
+          const categoriesArray = Object.values(groupedByCategory);
+          console.log('Grouped categories:', categoriesArray);
+          setCategories(categoriesArray);
           
           // Initialize expanded state - only first category is open
-          const expandedState = allSecondaryWithProducts.reduce((acc, cat, index) => ({ 
+          const expandedState = categoriesArray.reduce((acc, cat, index) => ({ 
             ...acc, 
-            [cat.category || cat.id]: index === 0 
+            [cat.category]: index === 0 
           }), {});
           setExpandedCategories(expandedState);
         }
       } catch (err) {
-        console.error('Error fetching categories:', err);
+        console.error('Error fetching products:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    loadCategories();
+    loadProducts();
   }, [shopId]);
 
   const toggleCategory = (categoryId) => {
