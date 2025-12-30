@@ -1,6 +1,6 @@
-import { useApp } from '../context/AppContext';
+import { useApp } from '../../../shared/context/AppContext';
 import { Link } from 'react-router-dom';
-import { getImageUrl } from '../constants';
+import { getImageUrl } from '../../../shared/constants';
 import '../styles/pages/Wishlist.css';
 
 const HeartIconLarge = () => (

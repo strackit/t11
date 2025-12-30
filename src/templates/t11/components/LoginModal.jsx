@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import ShopsQuery from 'shops-query';
-import { useApp } from '../context/AppContext';
-import { useShop } from '../context/ShopContext';
+import { useApp } from '../../../shared/context/AppContext';
+import { useShop } from '../../../shared/context/ShopContext';
 import '../styles/components/LoginModal.css';
 
 const CloseIcon = () => (

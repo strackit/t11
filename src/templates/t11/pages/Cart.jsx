@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useApp } from '../context/AppContext';
-import { useShop } from '../context/ShopContext';
+import { useApp } from '../../../shared/context/AppContext';
+import { useShop } from '../../../shared/context/ShopContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { getImageUrl } from '../constants';
+import { getImageUrl } from '../../../shared/constants';
 import '../styles/pages/Cart.css';
 
 const CartIconLarge = () => (

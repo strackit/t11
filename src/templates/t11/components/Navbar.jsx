@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
-import { useShop } from '../context/ShopContext';
+import { useApp } from '../../../shared/context/AppContext';
+import { useShop } from '../../../shared/context/ShopContext';
 import LoginModal from './LoginModal';
 import '../styles/components/Navbar.css';
 

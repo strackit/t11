@@ -1,4 +1,4 @@
-import { useApp } from '../context/AppContext';
+import { useApp } from '../../../shared/context/AppContext';
 import { Link } from 'react-router-dom';
 import '../styles/pages/Orders.css';
 

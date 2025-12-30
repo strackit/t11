@@ -1,13 +1,13 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ShopProvider } from './context/ShopContext';
-import { AppProvider } from './context/AppContext';
+import { ShopProvider } from '../../shared/context/ShopContext';
+import { AppProvider } from '../../shared/context/AppContext';
 import Navbar from './components/Navbar';
 import FloatingCartButton from './components/FloatingCartButton';
 import Home from './pages/Home';
 import Wishlist from './pages/Wishlist';
 import Cart from './pages/Cart';
 import Orders from './pages/Orders';
-import './index.css';
+import './App.css';
 
 function App() {
   return (
@@ -33,4 +33,3 @@ function App() {
 }
 
 export default App;
-
