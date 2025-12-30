@@ -30,6 +30,24 @@ const MinusIcon = () => (
   </svg>
 );
 
+// Lazy loading image component
+const LazyImage = ({ src, alt }) => {
+  const [loaded, setLoaded] = useState(false);
+  
+  return (
+    <div className={`lazy-image-wrapper ${loaded ? 'loaded' : ''}`}>
+      <div className="image-placeholder" />
+      <img 
+        src={src} 
+        alt={alt}
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+        className={`lazy-image ${loaded ? 'visible' : ''}`}
+      />
+    </div>
+  );
+};
+
 const Home = () => {
   const { addToCart, addToWishlist, isInWishlist, removeFromWishlist, getCartQuantity, updateCartQuantity } = useApp();
   const { shopId } = useShop();
@@ -149,7 +167,7 @@ const Home = () => {
                   return (
                     <div key={product.id} className="product-row">
                       <div className="product-image">
-                        <img src={getImageUrl(product.featureImage)} alt={product.name} />
+                        <LazyImage src={getImageUrl(product.featureImage)} alt={product.name} />
                       </div>
                       <div className="product-details">
                         <h3 className="product-name">{product.name}</h3>
