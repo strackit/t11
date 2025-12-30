@@ -87,10 +87,10 @@ const Home = () => {
           console.log('All secondary categories with products:', allSecondaryWithProducts);
           setCategories(allSecondaryWithProducts);
           
-          // Initialize expanded state for all secondary categories
-          const expandedState = allSecondaryWithProducts.reduce((acc, cat) => ({ 
+          // Initialize expanded state - only first category is open
+          const expandedState = allSecondaryWithProducts.reduce((acc, cat, index) => ({ 
             ...acc, 
-            [cat.category || cat.id]: true 
+            [cat.category || cat.id]: index === 0 
           }), {});
           setExpandedCategories(expandedState);
         }
