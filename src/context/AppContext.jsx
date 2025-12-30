@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import ShopsQuery from 'shops-query';
 
 const AppContext = createContext();
 
@@ -31,6 +32,33 @@ export const AppProvider = ({ children }) => {
     return saved || 'light';
   });
 
+  // Cookie helper functions
+  const getCookie = (name) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+      try {
+        return JSON.parse(decodeURIComponent(parts.pop().split(';').shift()));
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const setCookie = (name, value, days = 7) => {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))}; expires=${expires}; path=/`;
+  };
+
+  const deleteCookie = (name) => {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+  };
+
+  const [user, setUserState] = useState(() => {
+    return getCookie('ualum');
+  });
+
   // Persist to localStorage
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
@@ -52,6 +80,84 @@ export const AppProvider = ({ children }) => {
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
+  // User functions
+  const setUser = (userData) => {
+    setUserState(userData);
+    if (userData) {
+      setCookie('ualum', userData, 7); // Store in cookie for 7 days
+    } else {
+      deleteCookie('ualum');
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+  };
+
+  const isLoggedIn = !!user;
+
+  // Decode JWT token to get payload
+  const decodeJwt = (token) => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (err) {
+      console.error('Error decoding JWT:', err);
+      return null;
+    }
+  };
+
+  // Get user_id from JWT auth_token
+  const getUserIdFromToken = () => {
+    if (!user || !user.auth_token) return null;
+    const decoded = decodeJwt(user.auth_token);
+    return decoded?.user_id || null;
+  };
+
+  // Sync local cart to server
+  const syncCartToServer = async (shopId) => {
+    const userId = getUserIdFromToken();
+    if (!userId || cart.length === 0) return;
+    
+    try {
+      for (const item of cart) {
+        await ShopsQuery.cart.addToCart({
+          productId: item.id,
+          shopId: shopId,
+          userId: userId,
+          quantity: item.quantity
+        });
+      }
+      console.log('Cart synced to server successfully');
+    } catch (err) {
+      console.error('Error syncing cart to server:', err);
+    }
+  };
+
+  // Fetch cart from server
+  const fetchServerCart = async (shopId) => {
+    const userId = getUserIdFromToken();
+    if (!userId) return null;
+    try {
+      const serverCart = await ShopsQuery.cart.fetchCart({
+        userId: userId,
+        shopId: shopId
+      });
+      console.log('Fetched cart from server:', serverCart);
+      return serverCart;
+    } catch (err) {
+      console.error('Error fetching cart from server:', err);
+      return null;
+    }
   };
 
   // Cart functions
@@ -140,6 +246,12 @@ export const AppProvider = ({ children }) => {
         cart,
         wishlist,
         orders,
+        user,
+        isLoggedIn,
+        setUser,
+        logout,
+        syncCartToServer,
+        fetchServerCart,
         addToCart,
         removeFromCart,
         updateCartQuantity,

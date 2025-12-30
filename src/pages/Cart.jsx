@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { useShop } from '../context/ShopContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { getImageUrl } from '../constants';
 import '../styles/pages/Cart.css';
@@ -24,10 +25,54 @@ const CloseIcon = () => (
   </svg>
 );
 
+const CloudIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+  </svg>
+);
+
+const OfflineIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+  </svg>
+);
+
 const Cart = () => {
-  const { cart, removeFromCart, updateCartQuantity, cartTotal, placeOrder } = useApp();
+  const { cart, removeFromCart, updateCartQuantity, cartTotal, placeOrder, isLoggedIn, fetchServerCart } = useApp();
+  const { shopId } = useShop();
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [serverCart, setServerCart] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Fetch cart from server if user is logged in
+  useEffect(() => {
+    const loadServerCart = async () => {
+      if (isLoggedIn && shopId) {
+        setLoading(true);
+        try {
+          const cartData = await fetchServerCart(shopId);
+          setServerCart(cartData);
+        } catch (err) {
+          console.error('Error loading server cart:', err);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setServerCart(null);
+      }
+    };
+
+    loadServerCart();
+  }, [isLoggedIn, shopId, fetchServerCart]);
+
+  // Use server cart if logged in and has items, otherwise use local cart
+  const hasServerCart = isLoggedIn && serverCart && serverCart.length > 0;
+  const displayCart = hasServerCart ? serverCart : cart;
+  const displayTotal = hasServerCart 
+    ? serverCart.reduce((sum, item) => sum + (item.prize || 0) * item.quantity, 0)
+    : cartTotal;
 
   const handlePlaceOrder = () => {
     const order = placeOrder();
@@ -51,7 +96,17 @@ const Cart = () => {
     );
   }
 
-  if (cart.length === 0) {
+  if (loading) {
+    return (
+      <div className="cart empty-state">
+        <div className="empty-content">
+          <p>Loading cart...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (displayCart.length === 0) {
     return (
       <div className="cart empty-state">
         <div className="empty-content">
@@ -70,12 +125,20 @@ const Cart = () => {
     <div className="cart">
       <div className="page-header">
         <h1>Shopping Cart</h1>
-        <p>{cart.length} item{cart.length !== 1 ? 's' : ''} in cart</p>
+        <p>{displayCart.length} item{displayCart.length !== 1 ? 's' : ''} in cart</p>
+      </div>
+
+      <div className={`cart-source-indicator ${hasServerCart ? 'online' : 'offline'}`}>
+        {hasServerCart ? (
+          <><CloudIcon /> <span>Synced with server</span></>
+        ) : (
+          <><OfflineIcon /> <span>Local cart (login to sync)</span></>
+        )}
       </div>
 
       <div className="cart-layout">
         <div className="cart-items">
-          {cart.map((item) => (
+          {displayCart.map((item) => (
             <div key={item.id} className="cart-item">
               <div className="item-image">
                 <img src={getImageUrl(item.featureImage)} alt={item.name} />
@@ -119,7 +182,7 @@ const Cart = () => {
           <h3>Order Summary</h3>
           <div className="summary-row">
             <span>Subtotal</span>
-            <span>₹{cartTotal.toLocaleString()}</span>
+            <span>₹{displayTotal.toLocaleString()}</span>
           </div>
           <div className="summary-row">
             <span>Shipping</span>
@@ -128,7 +191,7 @@ const Cart = () => {
           <div className="summary-divider"></div>
           <div className="summary-row total">
             <span>Total</span>
-            <span>₹{cartTotal.toLocaleString()}</span>
+            <span>₹{displayTotal.toLocaleString()}</span>
           </div>
           <button className="place-order-btn" onClick={handlePlaceOrder}>
             Place Order

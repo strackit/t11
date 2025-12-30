@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import ShopsQuery from 'shops-query';
+import { useApp } from '../context/AppContext';
+import { useShop } from '../context/ShopContext';
 import '../styles/components/LoginModal.css';
 
 const CloseIcon = () => (
@@ -8,7 +10,10 @@ const CloseIcon = () => (
   </svg>
 );
 
-const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
+const LoginModal = ({ isOpen, onClose }) => {
+  const { setUser, syncCartToServer } = useApp();
+  const { shopId } = useShop();
+  
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -45,9 +50,14 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
         console.log('Login response:', response);
         
         if (response) {
-          if (onLoginSuccess) {
-            onLoginSuccess(response);
+          // Store user in context
+          setUser(response);
+          
+          // Sync local cart to server
+          if (shopId) {
+            await syncCartToServer(shopId);
           }
+          
           onClose();
         }
       }

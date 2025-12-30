@@ -33,6 +33,27 @@
   color: var(--text-secondary);
 }
 
+.cart-source-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+  width: fit-content;
+}
+
+.cart-source-indicator.online {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.cart-source-indicator.offline {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
 .cart-layout {
   display: grid;
   grid-template-columns: 1fr 360px;
