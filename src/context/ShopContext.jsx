@@ -23,12 +23,26 @@ export const ShopProvider = ({ children }) => {
         setLoading(true);
         setError(null);
         
-        const domainName = getDomainName();
-        console.log('Fetching shop for domain:', domainName);
+        // Check for shopId in URL query params first
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlShopId = urlParams.get('shopId');
         
-        const shopData = await ShopQuery.shop.fetchShops({
-          customDomain: domainName
-        });
+        let shopData;
+        
+        if (urlShopId) {
+          // Fetch shop by ID from URL
+          console.log('Fetching shop by ID from URL:', urlShopId);
+          shopData = await ShopQuery.shop.fetchShops({
+            id: urlShopId
+          });
+        } else {
+          // Fall back to domain name
+          const domainName = getDomainName();
+          console.log('Fetching shop for domain:', domainName);
+          shopData = await ShopQuery.shop.fetchShops({
+            customDomain: domainName
+          });
+        }
         
         console.log('Shop data received:', shopData);
         
@@ -37,7 +51,7 @@ export const ShopProvider = ({ children }) => {
         if (shopData && shopData.length > 0) {
           setShop(shopData[0]);
         } else {
-          setError('No shop found for this domain');
+          setError('No shop found');
         }
       } catch (err) {
         console.error('Error fetching shop:', err);
