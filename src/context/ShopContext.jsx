@@ -55,6 +55,13 @@ export const ShopProvider = ({ children }) => {
   const shopName = shop?.name || '';
   const isOnline = shop?.isOnline || false;
 
+  // Update browser title with shop name
+  useEffect(() => {
+    if (shopName) {
+      document.title = shopName;
+    }
+  }, [shopName]);
+
   return (
     <ShopContext.Provider
       value={{
