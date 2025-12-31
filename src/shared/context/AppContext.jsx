@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import ShopsQuery from 'shops-query';
+import { CartAPI } from '../services/api';
 
 const AppContext = createContext();
 
@@ -130,7 +130,7 @@ export const AppProvider = ({ children }) => {
     
     try {
       for (const item of cart) {
-        await ShopsQuery.cart.addToCart({
+        await CartAPI.addItem({
           productId: item.id,
           shopId: shopId,
           userId: userId,
@@ -148,7 +148,7 @@ export const AppProvider = ({ children }) => {
     const userId = getUserIdFromToken();
     if (!userId) return null;
     try {
-      const serverCart = await ShopsQuery.cart.fetchCart({
+      const serverCart = await CartAPI.fetch({
         userId: userId,
         shopId: shopId
       });

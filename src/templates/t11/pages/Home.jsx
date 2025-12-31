@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../../../shared/context/AppContext';
 import { useShop } from '../../../shared/context/ShopContext';
-import ShopQuery from 'shops-query';
+import { ProductsAPI } from '../../../shared/services/api';
 import { getImageUrl } from '../../../shared/constants';
 import '../styles/pages/Home.css';
 
@@ -65,7 +65,7 @@ const Home = () => {
         setLoading(true);
         
         // Single API call to get all products
-        const allProducts = await ShopQuery.products.getProductsController(shopId);
+        const allProducts = await ProductsAPI.getAll(shopId);
         console.log('All products:', allProducts);
         
         if (allProducts && Array.isArray(allProducts)) {

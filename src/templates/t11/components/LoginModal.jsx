@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import ShopsQuery from 'shops-query';
+import { AuthAPI } from '../../../shared/services/api';
 import { useApp } from '../../../shared/context/AppContext';
 import { useShop } from '../../../shared/context/ShopContext';
 import '../styles/components/LoginModal.css';
@@ -46,7 +46,7 @@ const LoginModal = ({ isOpen, onClose }) => {
         onClose();
       } else {
         // Login using shops-query loginUser
-        const response = await ShopsQuery.login.loginUser(formData.email, formData.password);
+        const response = await AuthAPI.login(formData.email, formData.password);
         console.log('Login response:', response);
         
         if (response) {

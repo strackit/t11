@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import ShopQuery from 'shops-query';
+import { ShopAPI } from '../services/api';
 import { getDomainName } from '../services/domainService';
 
 const ShopContext = createContext();
@@ -32,21 +32,16 @@ export const ShopProvider = ({ children }) => {
         if (urlShopId) {
           // Fetch shop by ID from URL
           console.log('Fetching shop by ID from URL:', urlShopId);
-          shopData = await ShopQuery.shop.fetchShops({
-            id: urlShopId
-          });
+          shopData = await ShopAPI.fetchById(urlShopId);
         } else {
           // Fall back to domain name
           const domainName = getDomainName();
           console.log('Fetching shop for domain:', domainName);
-          shopData = await ShopQuery.shop.fetchShops({
-            customDomain: domainName
-          });
+          shopData = await ShopAPI.fetchByDomain(domainName);
         }
         
         console.log('Shop data received:', shopData);
         
-
         // The API returns an array, we take the first shop
         if (shopData && shopData.length > 0) {
           setShop(shopData[0]);
