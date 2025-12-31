@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useApp } from '../../../shared/context/AppContext';
 import { Link } from 'react-router-dom';
+import LoginModal from '../components/LoginModal';
 import '../styles/pages/Orders.css';
 
 const PackageIconLarge = () => (
@@ -9,8 +11,16 @@ const PackageIconLarge = () => (
   </svg>
 );
 
+const UserLockIcon = () => (
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="empty-svg-icon">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+    <circle cx="12" cy="7" r="4"/>
+  </svg>
+);
+
 const Orders = () => {
-  const { orders } = useApp();
+  const { orders, isLoggedIn } = useApp();
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -22,6 +32,31 @@ const Orders = () => {
       minute: '2-digit'
     });
   };
+
+  // Show login prompt if user is not logged in
+  if (!isLoggedIn) {
+    return (
+      <>
+        <div className="orders empty-state">
+          <div className="empty-content">
+            <span className="empty-icon"><UserLockIcon /></span>
+            <h2>Login to view your orders</h2>
+            <p>Sign in to track your orders and view order history</p>
+            <button 
+              className="continue-shopping-btn" 
+              onClick={() => setIsLoginModalOpen(true)}
+            >
+              Login to Continue
+            </button>
+          </div>
+        </div>
+        <LoginModal 
+          isOpen={isLoginModalOpen} 
+          onClose={() => setIsLoginModalOpen(false)} 
+        />
+      </>
+    );
+  }
 
   if (orders.length === 0) {
     return (
@@ -89,3 +124,4 @@ const Orders = () => {
 };
 
 export default Orders;
+
