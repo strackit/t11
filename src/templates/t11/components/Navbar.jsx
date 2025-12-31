@@ -62,11 +62,20 @@ const UserIcon = () => (
   </svg>
 );
 
+const LogoutIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+    <polyline points="16 17 21 12 16 7"/>
+    <line x1="21" y1="12" x2="9" y2="12"/>
+  </svg>
+);
+
 const Navbar = () => {
   const location = useLocation();
-  const { cartCount, wishlist, theme, toggleTheme } = useApp();
+  const { cartCount, wishlist, theme, toggleTheme, user, isLoggedIn, logout } = useApp();
   const { shopName } = useShop();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const navItems = [
     { path: '/', label: 'Home', icon: <HomeIcon /> },
@@ -74,6 +83,28 @@ const Navbar = () => {
     { path: '/cart', label: 'Cart', icon: <CartIcon />, count: cartCount },
     { path: '/orders', label: 'Orders', icon: <PackageIcon /> }
   ];
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!user) return '';
+    const name = user.name || user.email || '';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  // Get display name
+  const getDisplayName = () => {
+    if (!user) return '';
+    return user.name || user.email?.split('@')[0] || 'User';
+  };
+
+  const handleLogout = () => {
+    logout();
+    setIsUserMenuOpen(false);
+  };
 
   return (
     <>
@@ -101,13 +132,46 @@ const Navbar = () => {
             ))}
           </ul>
 
-          <button 
-            className="nav-user-btn" 
-            onClick={() => setIsLoginModalOpen(true)} 
-            title="Login"
-          >
-            <UserIcon />
-          </button>
+          {isLoggedIn ? (
+            <div className="user-menu-container">
+              <button 
+                className="user-avatar-btn" 
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                title={getDisplayName()}
+              >
+                <span className="user-avatar">{getUserInitials()}</span>
+                <span className="user-name">{getDisplayName()}</span>
+              </button>
+              
+              {isUserMenuOpen && (
+                <>
+                  <div className="user-menu-overlay" onClick={() => setIsUserMenuOpen(false)} />
+                  <div className="user-dropdown-menu">
+                    <div className="user-menu-header">
+                      <span className="user-avatar-lg">{getUserInitials()}</span>
+                      <div className="user-menu-info">
+                        <span className="user-menu-name">{getDisplayName()}</span>
+                        {user?.email && <span className="user-menu-email">{user.email}</span>}
+                      </div>
+                    </div>
+                    <div className="user-menu-divider" />
+                    <button className="user-menu-item logout" onClick={handleLogout}>
+                      <LogoutIcon />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <button 
+              className="nav-user-btn" 
+              onClick={() => setIsLoginModalOpen(true)} 
+              title="Login"
+            >
+              <UserIcon />
+            </button>
+          )}
 
           <button className="theme-toggle" onClick={toggleTheme} title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
             {theme === 'light' ? <MoonIcon /> : <SunIcon />}
