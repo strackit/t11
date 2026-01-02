@@ -3,6 +3,8 @@ import { useApp } from '../../../shared/context/AppContext';
 import { useShop } from '../../../shared/context/ShopContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { getImageUrl } from '../../../shared/constants';
+import CheckoutModal from '../components/CheckoutModal';
+import LoginModal from '../components/LoginModal';
 import '../styles/pages/Cart.css';
 
 const CartIconLarge = () => (
@@ -39,11 +41,14 @@ const OfflineIcon = () => (
 );
 
 const Cart = () => {
-  const { cart, removeFromCart, updateCartQuantity, cartTotal, placeOrder, isLoggedIn, fetchServerCart } = useApp();
+  const { cart, removeFromCart, updateCartQuantity, cartTotal, isLoggedIn, fetchServerCart } = useApp();
   const { shopId } = useShop();
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [placedOrder, setPlacedOrder] = useState(null);
   const [serverCart, setServerCart] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const navigate = useNavigate();
 
   // Fetch cart from server if user is logged in
@@ -74,14 +79,21 @@ const Cart = () => {
     ? serverCart.reduce((sum, item) => sum + (item.prize || 0) * item.quantity, 0)
     : cartTotal;
 
-  const handlePlaceOrder = () => {
-    const order = placeOrder();
-    if (order) {
-      setOrderPlaced(true);
-      setTimeout(() => {
-        navigate('/orders');
-      }, 2000);
+  const handlePlaceOrderClick = () => {
+    if (!isLoggedIn) {
+      setIsLoginModalOpen(true);
+      return;
     }
+    setIsCheckoutOpen(true);
+  };
+
+  const handleOrderPlaced = (order) => {
+    setPlacedOrder(order);
+    setOrderPlaced(true);
+    setIsCheckoutOpen(false);
+    setTimeout(() => {
+      navigate('/orders');
+    }, 2500);
   };
 
   if (orderPlaced) {
@@ -90,7 +102,8 @@ const Cart = () => {
         <div className="success-content">
           <span className="success-icon"><CheckIcon /></span>
           <h2>Order Placed Successfully!</h2>
-          <p>Redirecting to orders...</p>
+          <p>Order ID: #{placedOrder?.id || placedOrder?.orderId}</p>
+          <p className="redirect-text">Redirecting to orders...</p>
         </div>
       </div>
     );
@@ -193,14 +206,26 @@ const Cart = () => {
             <span>Total</span>
             <span>₹{displayTotal.toLocaleString()}</span>
           </div>
-          <button className="place-order-btn" onClick={handlePlaceOrder}>
-            Place Order
+          <button className="place-order-btn" onClick={handlePlaceOrderClick}>
+            {isLoggedIn ? 'Proceed to Checkout' : 'Login to Checkout'}
           </button>
           <Link to="/" className="continue-link">
             ← Continue Shopping
           </Link>
         </div>
       </div>
+
+      <CheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        onOrderPlaced={handleOrderPlaced}
+        cartTotal={displayTotal}
+      />
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+      />
     </div>
   );
 };

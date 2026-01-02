@@ -7,3 +7,5 @@ export { ProductsAPI } from './api/productsApi';
 export { CartAPI } from './api/cartApi';
 export { AuthAPI } from './api/authApi';
 export { OrderHistoryAPI } from './api/orderHistoryApi';
+export { OrderAPI } from './api/orderApi';
+export { AddressAPI } from './api/addressApi';
