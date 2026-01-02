@@ -6,3 +6,4 @@ export { ShopAPI } from './api/shopApi';
 export { ProductsAPI } from './api/productsApi';
 export { CartAPI } from './api/cartApi';
 export { AuthAPI } from './api/authApi';
+export { OrderHistoryAPI } from './api/orderHistoryApi';

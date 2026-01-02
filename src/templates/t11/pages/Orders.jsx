@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../../../shared/context/AppContext';
+import { useShop } from '../../../shared/context/ShopContext';
+import { OrderHistoryAPI } from '../../../shared/services/api';
 import { Link } from 'react-router-dom';
 import LoginModal from '../components/LoginModal';
 import '../styles/pages/Orders.css';
@@ -18,9 +20,87 @@ const UserLockIcon = () => (
   </svg>
 );
 
+const LoadingSpinner = () => (
+  <div className="orders-loading">
+    <div className="spinner"></div>
+    <p>Loading your orders...</p>
+  </div>
+);
+
 const Orders = () => {
-  const { orders, isLoggedIn } = useApp();
+  const { isLoggedIn, user } = useApp();
+  const { shopId } = useShop();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  // Helper to decode JWT and get userId
+  const getUserIdFromToken = () => {
+    try {
+      if (!user || !user.auth_token) return null;
+      const base64Url = user.auth_token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      const decoded = JSON.parse(jsonPayload);
+      return decoded?.user_id || null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Fetch order history from server
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!isLoggedIn || !shopId) {
+        setLoading(false);
+        return;
+      }
+
+      const userId = getUserIdFromToken();
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        const orderHistory = await OrderHistoryAPI.fetch(userId, shopId);
+        
+        // Map API response to expected format
+        const formattedOrders = (orderHistory || []).map(order => ({
+          id: order.id || order.orderId,
+          orderId: order.orderId || `ORD-${order.id}`,
+          date: order.orderDate || order.addedon || order.date || new Date().toISOString(),
+          status: order.status || 'Confirmed',
+          total: order.totalAmount || order.total || 0,
+          items: (order.items || []).map(item => ({
+            id: item.id || item.productId,
+            productId: item.productId,
+            name: item.name || item.productName || 'Product',
+            image: item.featureImage || item.image || '/placeholder.png',
+            price: item.prize || item.price || 0,
+            quantity: item.quantity || 1
+          }))
+        }));
+
+        setOrders(formattedOrders);
+      } catch (err) {
+        console.error('Error fetching order history:', err);
+        setError('Failed to load orders. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [isLoggedIn, shopId, user]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -31,6 +111,16 @@ const Orders = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const getStatusClass = (status) => {
+    const statusLower = status?.toLowerCase() || '';
+    if (statusLower.includes('deliver')) return 'delivered';
+    if (statusLower.includes('ship') || statusLower.includes('transit')) return 'processing';
+    if (statusLower.includes('confirm') || statusLower.includes('placed')) return 'confirmed';
+    if (statusLower.includes('cancel')) return 'cancelled';
+    if (statusLower.includes('pending')) return 'pending';
+    return 'confirmed';
   };
 
   // Show login prompt if user is not logged in
@@ -58,6 +148,35 @@ const Orders = () => {
     );
   }
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="orders empty-state">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="orders empty-state">
+        <div className="empty-content">
+          <span className="empty-icon error-icon">⚠️</span>
+          <h2>Unable to load orders</h2>
+          <p>{error}</p>
+          <button 
+            className="continue-shopping-btn" 
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state
   if (orders.length === 0) {
     return (
       <div className="orders empty-state">
@@ -85,29 +204,39 @@ const Orders = () => {
           <div key={order.id} className="order-card">
             <div className="order-header">
               <div className="order-info">
-                <span className="order-id">Order #{order.id}</span>
+                <span className="order-id">Order #{order.orderId || order.id}</span>
                 <span className="order-date">{formatDate(order.date)}</span>
               </div>
-              <div className={`order-status ${order.status.toLowerCase()}`}>
+              <div className={`order-status ${getStatusClass(order.status)}`}>
                 {order.status}
               </div>
             </div>
 
             <div className="order-items">
-              {order.items.map((item) => (
-                <div key={item.id} className="order-item">
-                  <div className="item-image">
-                    <img src={item.image} alt={item.name} />
+              {order.items && order.items.length > 0 ? (
+                order.items.map((item, index) => (
+                  <div key={item.id || index} className="order-item">
+                    <div className="item-image">
+                      <img 
+                        src={item.image} 
+                        alt={item.name} 
+                        onError={(e) => { e.target.src = '/placeholder.png'; }}
+                      />
+                    </div>
+                    <div className="item-details">
+                      <span className="item-name">{item.name}</span>
+                      <span className="item-qty">Qty: {item.quantity}</span>
+                    </div>
+                    <div className="item-price">
+                      ₹{(item.price * item.quantity).toLocaleString()}
+                    </div>
                   </div>
-                  <div className="item-details">
-                    <span className="item-name">{item.name}</span>
-                    <span className="item-qty">Qty: {item.quantity}</span>
-                  </div>
-                  <div className="item-price">
-                    ₹{(item.price * item.quantity).toLocaleString()}
-                  </div>
+                ))
+              ) : (
+                <div className="order-item-placeholder">
+                  <p>Order details not available</p>
                 </div>
-              ))}
+              )}
             </div>
 
             <div className="order-footer">
@@ -124,4 +253,3 @@ const Orders = () => {
 };
 
 export default Orders;
-
