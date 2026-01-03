@@ -8,37 +8,37 @@ import '../styles/pages/Home.css';
 // SVG Icons for Home page
 const HeartIcon = ({ filled }) => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
   </svg>
 );
 
 const ChevronIcon = ({ expanded }) => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}>
-    <polyline points="6 9 12 15 18 9"/>
+    <polyline points="6 9 12 15 18 9" />
   </svg>
 );
 
 const PlusIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
   </svg>
 );
 
 const MinusIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="5" y1="12" x2="19" y2="12"/>
+    <line x1="5" y1="12" x2="19" y2="12" />
   </svg>
 );
 
 // Lazy loading image component
 const LazyImage = ({ src, alt }) => {
   const [loaded, setLoaded] = useState(false);
-  
+
   return (
     <div className={`lazy-image-wrapper ${loaded ? 'loaded' : ''}`}>
       <div className="image-placeholder" />
-      <img 
-        src={src} 
+      <img
+        src={src}
         alt={alt}
         loading="lazy"
         onLoad={() => setLoaded(true)}
@@ -51,7 +51,7 @@ const LazyImage = ({ src, alt }) => {
 const Home = () => {
   const { addToCart, addToWishlist, isInWishlist, removeFromWishlist, getCartQuantity, updateCartQuantity } = useApp();
   const { shopId } = useShop();
-  
+
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedCategories, setExpandedCategories] = useState({});
@@ -60,14 +60,14 @@ const Home = () => {
   useEffect(() => {
     const loadProducts = async () => {
       if (!shopId) return;
-      
+
       try {
         setLoading(true);
-        
+
         // Single API call to get all products
         const allProducts = await ProductsAPI.getAll(shopId);
         console.log('All products:', allProducts);
-        
+
         if (allProducts && Array.isArray(allProducts)) {
           // Group products by secondary category
           const groupedByCategory = allProducts.reduce((acc, product) => {
@@ -81,15 +81,15 @@ const Home = () => {
             acc[categoryName].products.push(product);
             return acc;
           }, {});
-          
+
           const categoriesArray = Object.values(groupedByCategory);
           console.log('Grouped categories:', categoriesArray);
           setCategories(categoriesArray);
-          
+
           // Initialize expanded state - only first category is open
-          const expandedState = categoriesArray.reduce((acc, cat, index) => ({ 
-            ...acc, 
-            [cat.category]: index === 0 
+          const expandedState = categoriesArray.reduce((acc, cat, index) => ({
+            ...acc,
+            [cat.category]: index === 0
           }), {});
           setExpandedCategories(expandedState);
         }
@@ -163,58 +163,58 @@ const Home = () => {
                 <div className="products-list">
                   {(cat.products || []).map((product) => {
                     const cartQty = getCartQuantity(product.id);
-                  
-                  return (
-                    <div key={product.id} className="product-row">
-                      <div className="product-image">
-                        <LazyImage src={getImageUrl(product.featureImage)} alt={product.name} />
-                      </div>
-                      <div className="product-details">
-                        <h3 className="product-name">{product.name}</h3>
-                        <p className="product-description" dangerouslySetInnerHTML={{ __html: product.description }} />
-                        <p className="product-price">₹{product.prize?.toLocaleString()}</p>
-                      </div>
-                      <div className="product-actions">
-                        <button
-                          className={`wishlist-btn ${isInWishlist(product.id) ? 'active' : ''}`}
-                          onClick={() => handleWishlistToggle(product)}
-                          title={isInWishlist(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
-                        >
-                          <HeartIcon filled={isInWishlist(product.id)} />
-                        </button>
-                        
-                        {cartQty > 0 ? (
-                          <div className="quantity-controls">
-                            <button 
-                              className="qty-btn"
-                              onClick={() => updateCartQuantity(product.id, cartQty - 1)}
-                            >
-                              <MinusIcon />
-                            </button>
-                            <span className="qty-value">{cartQty}</span>
-                            <button 
-                              className="qty-btn"
-                              onClick={() => updateCartQuantity(product.id, cartQty + 1)}
+
+                    return (
+                      <div key={product.id} className="product-row">
+                        <div className="product-image">
+                          <LazyImage src={getImageUrl(product.featureImage)} alt={product.name} />
+                        </div>
+                        <div className="product-details">
+                          <h3 className="product-name">{product.name}</h3>
+                          <p className="product-description" dangerouslySetInnerHTML={{ __html: product.description }} />
+                          <p className="product-price">₹{product.prize?.toLocaleString()}</p>
+                        </div>
+                        <div className="product-actions">
+                          <button
+                            className={`wishlist-btn ${isInWishlist(product.id) ? 'active' : ''}`}
+                            onClick={() => handleWishlistToggle(product)}
+                            title={isInWishlist(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                          >
+                            <HeartIcon filled={isInWishlist(product.id)} />
+                          </button>
+
+                          {cartQty > 0 ? (
+                            <div className="quantity-controls">
+                              <button
+                                className="qty-btn"
+                                onClick={() => updateCartQuantity(product.id, cartQty - 1)}
+                              >
+                                <MinusIcon />
+                              </button>
+                              <span className="qty-value">{cartQty}</span>
+                              <button
+                                className="qty-btn"
+                                onClick={() => updateCartQuantity(product.id, cartQty + 1)}
+                              >
+                                <PlusIcon />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              className="add-to-cart-btn"
+                              onClick={() => addToCart(product, shopId, cartQty + 1)}
                             >
                               <PlusIcon />
+                              <span>Add to Cart</span>
                             </button>
-                          </div>
-                        ) : (
-                          <button
-                            className="add-to-cart-btn"
-                            onClick={() => addToCart(product)}
-                          >
-                            <PlusIcon />
-                            <span>Add to Cart</span>
-                          </button>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
           );
         })}
       </div>

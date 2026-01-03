@@ -9,39 +9,39 @@ import '../styles/pages/Cart.css';
 
 const CartIconLarge = () => (
   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="empty-svg-icon">
-    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+    <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
   </svg>
 );
 
 const CheckIcon = () => (
   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="success-svg-icon">
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-    <polyline points="22 4 12 14.01 9 11.01"/>
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+    <polyline points="22 4 12 14.01 9 11.01" />
   </svg>
 );
 
 const CloseIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 );
 
 const CloudIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
   </svg>
 );
 
 const OfflineIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
   </svg>
 );
 
 const Cart = () => {
-  const { cart, removeFromCart, updateCartQuantity, cartTotal, isLoggedIn, fetchServerCart } = useApp();
+  const { cart, removeFromCart, updateCartQuantity, cartTotal, isLoggedIn, fetchServerCart, syncCartToServer } = useApp();
   const { shopId } = useShop();
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [placedOrder, setPlacedOrder] = useState(null);
@@ -52,13 +52,22 @@ const Cart = () => {
   const navigate = useNavigate();
 
   // Fetch cart from server if user is logged in
+  const [cartLoaded, setCartLoaded] = useState(false);
+
   useEffect(() => {
     const loadServerCart = async () => {
+      if (cartLoaded) return; // Prevent reloading
+
       if (isLoggedIn && shopId) {
         setLoading(true);
         try {
+          // Sync local cart to server first (only if there are local items)
+          await syncCartToServer(shopId);
+
+          // Fetch server cart
           const cartData = await fetchServerCart(shopId);
           setServerCart(cartData);
+          setCartLoaded(true);
         } catch (err) {
           console.error('Error loading server cart:', err);
         } finally {
@@ -66,16 +75,25 @@ const Cart = () => {
         }
       } else {
         setServerCart(null);
+        setCartLoaded(true);
       }
     };
 
     loadServerCart();
-  }, [isLoggedIn, shopId, fetchServerCart]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, shopId]); // Removed fetchServerCart from dependencies
+
+  // Sync serverCart with cart from AppContext when it changes
+  useEffect(() => {
+    if (isLoggedIn && cartLoaded) {
+      setServerCart(cart);
+    }
+  }, [cart, isLoggedIn, cartLoaded]);
 
   // Use server cart if logged in and has items, otherwise use local cart
   const hasServerCart = isLoggedIn && serverCart && serverCart.length > 0;
   const displayCart = hasServerCart ? serverCart : cart;
-  const displayTotal = hasServerCart 
+  const displayTotal = hasServerCart
     ? serverCart.reduce((sum, item) => sum + (item.prize || 0) * item.quantity, 0)
     : cartTotal;
 
@@ -183,7 +201,7 @@ const Cart = () => {
               </div>
               <button
                 className="remove-item-btn"
-                onClick={() => removeFromCart(item.id)}
+                onClick={() => removeFromCart(item, shopId)}
               >
                 <CloseIcon />
               </button>
