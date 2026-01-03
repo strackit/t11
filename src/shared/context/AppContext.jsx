@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { CartAPI } from '../services/api';
+import { CartAPI, OrderHistoryAPI } from '../services/api';
 
 const AppContext = createContext();
 
@@ -118,18 +118,36 @@ export const AppProvider = ({ children }) => {
 
   // Get user_id from JWT auth_token
   const getUserIdFromToken = () => {
-    if (!user || !user.auth_token) return null;
-    const decoded = decodeJwt(user.auth_token);
-    return decoded?.user_id || null;
+    try {
+      const cookieData = getCookie("ualum");
+      if (cookieData) {
+        // Some versions store as JSON in cookie, some just the string
+        let token = cookieData;
+        try {
+          cookieData = JSON.parse(cookieData);
+          token = cookieData.auth;
+        } catch (e) {
+          token = cookieData.auth;
+        }
+        const decodedAuth = decodeJwt(token);
+        return parseInt(decodedAuth.user_id || decodedAuth.userId || decodedAuth.id);
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
   };
 
   // Sync local cart to server
   const syncCartToServer = async (shopId) => {
     const userId = getUserIdFromToken();
     if (!userId || cart.length === 0) return;
-    
+
     try {
-      for (const item of cart) {
+      // Only sync items that don't have productId (local items)
+      const localItems = cart.filter(item => !item.productId);
+
+      for (const item of localItems) {
         await CartAPI.addItem({
           productId: item.id,
           shopId: shopId,
@@ -137,22 +155,43 @@ export const AppProvider = ({ children }) => {
           quantity: item.quantity
         });
       }
+
+      // Clear localStorage
+      localStorage.removeItem('cart');
+
+      // Fetch fresh cart from server and update state
+      const serverCart = await CartAPI.fetch(userId, shopId);
+      setCart(serverCart || []);
+
       console.log('Cart synced to server successfully');
     } catch (err) {
       console.error('Error syncing cart to server:', err);
     }
   };
 
-  // Fetch cart from server
-  const fetchServerCart = async (shopId) => {
-    const userId = getUserIdFromToken();
+  //Get Order Details
+  const getOrderDetails = async (shopId) => {
+    const userId = await getUserIdFromToken();
     if (!userId) return null;
     try {
-      const serverCart = await CartAPI.fetch({
-        userId: userId,
-        shopId: shopId
-      });
-      console.log('Fetched cart from server:', serverCart);
+      const orderDetails = await OrderHistoryAPI.fetch(userId, shopId);
+      return orderDetails;
+    } catch (err) {
+      console.error('Error fetching order details:', err);
+      return null;
+    }
+  };
+
+  // Fetch cart from server
+  const fetchServerCart = async (shopId) => {
+    const userId = await getUserIdFromToken();
+    if (!userId) return null;
+    try {
+      const serverCart = await CartAPI.fetch(userId, shopId);
+      // Update local cart state with server cart
+      if (serverCart) {
+        setCart(serverCart);
+      }
       return serverCart;
     } catch (err) {
       console.error('Error fetching cart from server:', err);
@@ -161,22 +200,42 @@ export const AppProvider = ({ children }) => {
   };
 
   // Cart functions
-  const addToCart = (product) => {
+  const addToCart = async (product, shopId, quantity = 1) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
         return prev.map((item) =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity }];
     });
+    const userId = await getUserIdFromToken();
+    if (userId) {
+      await CartAPI.addItem({
+        productId: product.id,
+        shopId: shopId,
+        userId: userId,
+        quantity: quantity
+      });
+    }
   };
 
-  const removeFromCart = (productId) => {
-    setCart((prev) => prev.filter((item) => item.id !== productId));
+  const removeFromCart = async (item, shopId) => {
+    const userId = getUserIdFromToken();
+    const productIdToRemove = item.productId || item.id;
+
+    if (userId) {
+      await CartAPI.remove({ userId, productId: productIdToRemove, shopId });
+    }
+
+    // Remove from local cart state
+    setCart((prev) => prev.filter((cartItem) => {
+      const cartProductId = cartItem.productId || cartItem.id;
+      return cartProductId !== productIdToRemove;
+    }));
   };
 
   const updateCartQuantity = (productId, quantity) => {
@@ -212,8 +271,8 @@ export const AppProvider = ({ children }) => {
   };
 
   const getCartQuantity = (productId) => {
-    const item = cart.find((item) => item.id === productId);
-    return item ? item.quantity : 0;
+    const item = cart.find((item) => item.id === productId || item.productId === productId);
+    return item ? (item.quantity || 0) : 0;
   };
 
   // Order functions
@@ -233,12 +292,16 @@ export const AppProvider = ({ children }) => {
     return order;
   };
 
-  const cartTotal = cart.reduce(
-    (sum, item) => sum + (item.prize || 0) * item.quantity,
-    0
-  );
+  const cartTotal = cart.reduce((sum, item) => {
+    const price = item.prize || item.price || 0;
+    const quantity = item.quantity || 0;
+    return sum + (price * quantity);
+  }, 0);
 
-  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const cartCount = cart.reduce((sum, item) => {
+    const quantity = item.quantity || 0;
+    return sum + quantity;
+  }, 0);
 
   return (
     <AppContext.Provider
@@ -260,11 +323,13 @@ export const AppProvider = ({ children }) => {
         removeFromWishlist,
         isInWishlist,
         placeOrder,
+        getOrderDetails,
         cartTotal,
         cartCount,
         getCartQuantity,
         theme,
-        toggleTheme
+        toggleTheme,
+        getUserIdFromToken
       }}
     >
       {children}

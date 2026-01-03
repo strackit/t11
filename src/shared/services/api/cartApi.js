@@ -20,9 +20,17 @@ export const CartAPI = {
 
   /**
    * Fetch cart for user
-   * @param {object} params - { userId, shopId }
+   * @param {object} params - userId, shopId
    */
-  fetch: async ({ userId, shopId }) => {
-    return await ShopsQuery.cart.fetchCart({ userId, shopId });
+  fetch: async (userId, shopId) => {
+    return await ShopsQuery.cart.fetchCart(shopId, userId);
+  },
+
+  /**
+   * Remove From Cart
+   * @param {object} params - { userId, productId, shopId }
+   */
+  remove: async ({ userId, productId, shopId }) => {
+    return await ShopsQuery.cart.removeFromCart({ userId, productId, shopId });
   }
 };
